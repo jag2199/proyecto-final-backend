@@ -1,13 +1,16 @@
 import { Router } from "express"
 import Api from "../api"
 
-
 const router = Router()
-const api = new Api("../DB/productos.json")
+const api = new Api("/DB/productos.json")
+
+const errorAdmin = { error: "Operacion no autorizada" }
+const admin = true
 
 router.get("/", async (req, res) => {
     const productos = await api.getAll()
-    res.json(productos)
+    console.log(productos)
+    res.send(productos)
 })
 
 router.get("/:id", async (req, res) => {
@@ -17,18 +20,38 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/", async (req, res) => {
-    const obj = req.body
-    const idProducto = await api.save(obj)
-    res.json(idProducto)
+    if (admin) {
+        const obj = req.body
+        const idProducto = await api.save(obj)
+        res.json({ message: `Producto n°${idProducto} agregado` })
+    }
+    else {
+        res.json(errorAdmin)
+    }
+
 })
 
-router.put("/:id", (req, res) => {
-    res.json(api.update(req.params.id, req.body))
+router.put("/:id", async (req, res) => {
+    if (admin) {
+        const obj = req.body
+        obj.timestamp = getFecha()
+        await api.update(req.params.id, obj)
+    }
+    else {
+        res.json(errorAdmin)
+    }
+
 })
 
-router.delete("/:id", (req, res) => {
-    res.json(api.delete(req.params.id))
-})
+router.delete("/:id", async (req, res) => {
+    if (admin) {
+        const { id } = req.params
+        await api.delete(id)
+    }
+    else {
+        res.json(errorAdmin)
+    }
 
+})
 
 export default router

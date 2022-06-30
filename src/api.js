@@ -1,6 +1,6 @@
 import fs from "fs"
 
-export default class Api {
+class Api {
     constructor(rutaDB) {
         this.rutaDB = (__dirname + rutaDB)
     }
@@ -12,6 +12,7 @@ export default class Api {
     async getAll() {
         try {
             const all = await fs.promises.readFile(this.rutaDB)
+            console.log(JSON.parse(all))
             return JSON.parse(all)
         } catch (error) {
             throw new Error(`Error: ${error}`)
@@ -31,8 +32,10 @@ export default class Api {
         try {
             const all = await this.getAll()
             obj["id"] = all.length ? ((all[all.length - 1].id) + 1) : 1
+            obj.timestamp = this.getFecha()
             all.push(obj)
             this.write(all)
+            return obj["id"]
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
@@ -42,7 +45,7 @@ export default class Api {
             const all = await this.getAll()
             const newAll = all.map(p, () => {
                 if (p.id == id) {
-                    p = { ...obj, id: id }
+                    p = { ...obj, timestamp: this.getFecha() }
                 }
             })
             this.write(newAll)
@@ -64,10 +67,9 @@ export default class Api {
     async deleteFrom(id, subId) {
         try {
             const all = await this.getAll()
-            all.map((c) => {
+            const newAll = all.map((c) => {
                 if (c["id"] == id) {
-                    c.filter(p => p.id !== subId)
-                    return p
+                    c.productos.filter(p => p.id !== subId)
                 }
             })
             this.write(newAll)
@@ -75,4 +77,13 @@ export default class Api {
             throw new Error(`Error: ${error}`)
         }
     }
+
+    getFecha = () => {
+        const date = new Date()
+        const fecha = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} a las ${date.getHours()}:${date.getMinutes()}hs`
+        return fecha
+    }
 }
+
+export default Api
+
