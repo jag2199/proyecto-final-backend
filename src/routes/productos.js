@@ -1,8 +1,7 @@
 import { Router } from "express"
-import Api from "../api"
+import { productosDao as api } from '../daos/index.js'
 
 const router = Router()
-const api = new Api("/DB/productos.json")
 
 const errorAdmin = { error: "Operacion no autorizada" }
 const admin = true

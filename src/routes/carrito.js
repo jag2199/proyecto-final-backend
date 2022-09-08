@@ -1,9 +1,7 @@
-import fs from "fs"
 import { Router } from "express"
-import Api from "../api"
+import { carritosDao as api } from '../daos/index.js'
 
 const router = Router()
-const api = new Api("/DB/carrito.json")
 
 router.get("/:id/productos", async (req, res) => {
     const carritos = await api.getAll()

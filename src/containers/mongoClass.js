@@ -1,8 +1,11 @@
-import fs from "fs"
+import mongoose from "mongoose"
+import config from "../config"
 
-class Api {
-    constructor(rutaDB) {
-        this.rutaDB = (__dirname + rutaDB)
+mongoose.connect(config.mongoDB.URL, config.mongoDB.options)
+
+export default class MongoClass {
+    constructor(nombre, docSchema) {
+        this.coleccion = mongoose.model(nombre, docSchema)
     }
 
     async write(all) {
@@ -11,9 +14,8 @@ class Api {
 
     async getAll() {
         try {
-            const all = await fs.promises.readFile(this.rutaDB)
-            console.log(JSON.parse(all))
-            return JSON.parse(all)
+            const all = await this.coleccion.find({})
+            return all
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
@@ -21,8 +23,7 @@ class Api {
 
     async getById(id) {
         try {
-            const all = await this.getAll()
-            return all.find(a => a.id == id)
+            return await this.coleccion.find({ id: id })
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
@@ -33,22 +34,18 @@ class Api {
             const all = await this.getAll()
             obj["id"] = all.length ? ((all[all.length - 1].id) + 1) : 1
             obj.timestamp = this.getFecha()
-            all.push(obj)
-            this.write(all)
-            return obj["id"]
+            const newObj = await this.coleccion.create(obj)
+            return newObj
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
     }
+
     async update(id, obj) {
         try {
-            const all = await this.getAll()
-            const newAll = all.map(p, () => {
-                if (p.id == id) {
-                    p = { ...obj, timestamp: this.getFecha() }
-                }
-            })
-            this.write(newAll)
+            obj.timestamp = this.getFecha()
+            const newObj = await this.collection.findByIdAndUpdate(id, obj)
+            return newObj
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
@@ -56,9 +53,7 @@ class Api {
 
     async delete(id) {
         try {
-            const all = await this.getAll()
-            const newAll = all.filter(p => p.id !== id)
-            this.write(newAll)
+            return await this.coleccion.findByIdAndDelete(id)
         } catch (error) {
             throw new Error(`Error: ${error}`)
         }
@@ -85,5 +80,4 @@ class Api {
     }
 }
 
-export default Api
 
